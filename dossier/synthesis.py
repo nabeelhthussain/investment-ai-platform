@@ -98,7 +98,7 @@ def synthesize_dossier(
     lines.append(bear_result.get("analysis", "[No bear case analysis available]"))
     lines.append("")
 
-    # ── Contradictions ────────────────────────────────────────────────────
+# ── Contradictions ────────────────────────────────────────────────────
     lines.append("---")
     lines.append("")
     lines.append("## Management Contradictions & Tone Shifts")
@@ -109,6 +109,14 @@ def synthesize_dossier(
         lines.append("")
     lines.append(contradiction_result.get("analysis", "[No contradiction analysis available]"))
     lines.append("")
+
+    # FinBERT tone section (if available)
+    tone_section = contradiction_result.get("tone_section", "")
+    if tone_section:
+        lines.append("---")
+        lines.append("")
+        lines.append(tone_section)
+        lines.append("")
 
     # ── Gap Analysis ──────────────────────────────────────────────────────
     lines.append("---")

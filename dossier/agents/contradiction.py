@@ -1,13 +1,15 @@
 """
-Contradiction Detector Agent.
-
-Compares management statements across filings and earnings calls
-to detect: factual contradictions, guidance misses, tone shifts,
-and changes in strategic framing.
+Contradiction Detector Agent — enhanced with FinBERT quantitative tone scoring.
 """
 from models.router import call_llm_with_context, call_llm
 from retrieval.hybrid import HybridRetriever
 from config import COMPANIES
+
+try:
+    from ingestion.tone_analyzer import analyze_tone_trends, format_tone_section
+    TONE_AVAILABLE = True
+except ImportError:
+    TONE_AVAILABLE = False
 
 SYSTEM_PROMPT = """You are a forensic analyst specializing in detecting management 
 credibility issues in corporate disclosures.
@@ -89,39 +91,46 @@ def run_contradiction_detection(ticker: str, retriever: HybridRetriever) -> dict
     queries = CONTRADICTION_QUERIES.get(ticker, CONTRADICTION_QUERIES["SOC"])
 
     print(f"  Running contradiction detection for {ticker}...")
-
-    # Get chunks, prioritizing multi-period coverage
     chunks = retriever.retrieve_multi(queries, top_k_per_query=4)
 
     if not chunks:
-        return {
-            "ticker": ticker,
-            "analysis": "[UNCERTAIN — Insufficient documents available for contradiction analysis]",
-            "chunks_used": 0,
-        }
+        return {"ticker": ticker, "chunks_used": 0, "tone_section": "",
+                "analysis": "[UNCERTAIN — Insufficient documents available]"}
 
-    # Sort chunks by date to help the LLM compare across time periods
-    chunks_sorted = sorted(chunks, key=lambda x: x.get("date", ""), reverse=False)
+    # FinBERT quantitative layer
+    tone_result = None
+    tone_section = ""
+    shift_summary = ""
+    if TONE_AVAILABLE:
+        print("  Running FinBERT tone analysis...")
+        all_chunks = retriever.retrieve_multi(queries, top_k_per_query=8)
+        tone_result = analyze_tone_trends(all_chunks)
+        tone_section = format_tone_section(tone_result)
+        shifts = tone_result.get("significant_shifts", [])
+        if shifts:
+            shift_summary = "\n\nFinBERT pre-screening detected these tone shifts to investigate:\n"
+            for s in shifts[:5]:
+                shift_summary += (f"- {s['topic'].replace('_',' ').title()}: became "
+                                  f"{'MORE NEGATIVE' if s['neg_delta'] > 0 else 'MORE POSITIVE'} "
+                                  f"from {s['from_period']} to {s['to_period']} "
+                                  f"(Δneg={s['neg_delta']:+.3f}, {s['magnitude']})\n")
+    else:
+        print("  Skipping FinBERT (install with: pip install transformers torch)")
 
+    chunks_sorted = sorted(chunks, key=lambda x: x.get("date", ""))
     prompt = CONTRADICTION_PROMPT.format(
-        company=company_info.get("name", ticker),
-        ticker=ticker,
-    )
+        company=company_info.get("name", ticker), ticker=ticker,
+    ) + shift_summary
 
     analysis = call_llm_with_context(
-        query=prompt,
-        context_chunks=chunks_sorted,
-        system=SYSTEM_PROMPT,
-        max_tokens=3000,
+        query=prompt, context_chunks=chunks_sorted,
+        system=SYSTEM_PROMPT, max_tokens=3000,
     )
 
-    return {
-        "ticker": ticker,
-        "analysis": analysis,
-        "chunks_used": len(chunks),
-        "date_range": _get_date_range(chunks),
-        "source_docs": list({c.get("doc_type") for c in chunks}),
-    }
+    return {"ticker": ticker, "analysis": analysis, "tone_section": tone_section,
+            "tone_result": tone_result, "chunks_used": len(chunks),
+            "date_range": _get_date_range(chunks),
+            "source_docs": list({c.get("doc_type") for c in chunks})}
 
 
 def _get_date_range(chunks: list[dict]) -> str:
