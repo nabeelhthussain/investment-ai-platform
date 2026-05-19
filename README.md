@@ -96,3 +96,4 @@ See `scaling/architecture.md` for:
 2. Earnings call transcripts require a paid provider (Seeking Alpha, Refinitiv) — not included
 3. BM25 retrieval is adequate for this demo but dense embedding retrieval would improve recall on semantic queries
 4. Norwegian-language content is not translated — AKSO analysis is based on English-language materials only
+# investment-ai-platform
