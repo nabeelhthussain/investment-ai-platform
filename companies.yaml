@@ -1,0 +1,115 @@
+# Company registry — auto-populated when you run the pipeline with a new ticker.
+# You can also add companies manually here.
+# New US tickers are resolved automatically via SEC EDGAR.
+# Non-US tickers are resolved via LLM + web search.
+
+companies:
+  SOC:
+    name: Sable Offshore Corp
+    exchange: NYSE
+    sector: Oil & Gas Exploration & Production
+    description: Oil and gas company focused on restarting offshore California assets
+    currency: USD
+    reporting_standard: US GAAP
+    country: USA
+    cik: "0001831481"
+    fetcher: sec_edgar
+    expected_docs:
+      - type: 10-K
+        description: Annual report
+        criticality: CRITICAL
+      - type: 10-Q
+        description: Quarterly reports (last 3)
+        criticality: HIGH
+      - type: 8-K
+        description: Material event disclosures
+        criticality: HIGH
+      - type: DEF14A
+        description: Proxy statement / governance
+        criticality: MEDIUM
+      - type: earnings_call
+        description: Earnings call transcripts
+        criticality: HIGH
+      - type: investor_pres
+        description: Investor day presentations
+        criticality: MEDIUM
+      - type: reserve_report
+        description: Independent reserve certification
+        criticality: CRITICAL
+      - type: credit_rating
+        description: Credit rating report
+        criticality: HIGH
+
+  AKSO:
+    name: Aker Solutions ASA
+    exchange: OSE
+    sector: Oilfield Services
+    description: Norwegian oilfield services company listed on Oslo Stock Exchange
+    currency: NOK
+    reporting_standard: IFRS
+    country: Norway
+    fetcher: oslo_bors
+    esef_urls:
+      - url: "https://www.akersolutions.com/globalassets/investors/agm/2026/5967007lieexzxg42836-2025-12-31-en.zip"
+        year: 2025
+        period_end: "2025-12-31"
+      - url: "https://www.akersolutions.com/globalassets/investors/agm/2025/5967007lieexzxg42836-2024-12-31-en.zip"
+        year: 2024
+        period_end: "2024-12-31"
+      - url: "https://www.akersolutions.com/globalassets/investors/agm/2024/5967007lieexzxg42836-2023-12-31-en.zip"
+        year: 2023
+        period_end: "2023-12-31"
+    annual_report_urls:
+      - url: "https://www.akersolutions.com/globalassets/investors/agm/2026/aker-solutions-annual-report-2025.pdf"
+        doc_type: annual_report
+        date: "2025-03-14"
+        section: Annual Report 2025
+      - url: "https://www.akersolutions.com/globalassets/investors/agm/2025/akso---annual-report-2024.pdf"
+        doc_type: annual_report
+        date: "2024-03-14"
+        section: Annual Report 2024
+      - url: "https://www.akersolutions.com/globalassets/investors/agm/2024/akso---annual-report-2023---doc.pdf"
+        doc_type: annual_report
+        date: "2023-03-09"
+        section: Annual Report 2023
+      - url: "https://www.akersolutions.com/globalassets/huginreport/2022/annual-report-2022.pdf"
+        doc_type: annual_report
+        date: "2022-03-10"
+        section: Annual Report 2022
+      - url: "https://www.akersolutions.com/globalassets/global/downloads/half-year-results-2024.pdf"
+        doc_type: quarterly
+        date: "2024-08-15"
+        section: Half Year Results 2024
+      - url: "https://www.akersolutions.com/globalassets/investors/agm/2025/remuneration-report-2024.pdf"
+        doc_type: esg_report
+        date: "2025-03-31"
+        section: Remuneration Report 2024
+    supplemental_urls:
+      - url: "https://www.akersolutions.com/news/news-archive/2025/aker-solutions-asa-annual-remuneration-and-corporate-governance-reports-for-2024/"
+        doc_type: reg_filing
+      - url: "https://www.akersolutions.com/news/news-archive/2025/aker-solutions-asafourth-quarter-and-full-year-2024-results/"
+        doc_type: quarterly
+      - url: "https://www.akersolutions.com/news/news-archive/"
+        doc_type: news
+    expected_docs:
+      - type: annual_report
+        description: Annual report (English)
+        criticality: CRITICAL
+      - type: quarterly
+        description: Quarterly/interim reports
+        criticality: HIGH
+      - type: earnings_call
+        description: Earnings call transcripts
+        criticality: HIGH
+      - type: investor_pres
+        description: Capital markets day presentation
+        criticality: MEDIUM
+      - type: esg_report
+        description: Sustainability / ESG report
+        criticality: MEDIUM
+      - type: credit_rating
+        description: Credit rating report
+        criticality: HIGH
+      - type: reg_filing
+        description: Oslo Bors regulatory filings
+        criticality: HIGH
